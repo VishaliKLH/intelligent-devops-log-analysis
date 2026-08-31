@@ -1,0 +1,43 @@
+name: CI - Log Anomaly Detection Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run preprocessing
+        run: python src/preprocess.py
+
+      - name: Train model and detect anomalies
+        run: python src/train_model.py
+
+      - name: Evaluate model
+        run: python src/evaluate.py
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+      - name: Upload anomaly report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anomaly-report
+          path: |
+            output/anomalies_report.csv
+            output/evaluation_metrics.txt

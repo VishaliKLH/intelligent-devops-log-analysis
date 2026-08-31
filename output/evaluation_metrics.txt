@@ -1,0 +1,20 @@
+Evaluation Report — Isolation Forest vs Reference (rule-based) Labels
+======================================================================
+Total logs               : 2000
+Reference anomalies (rule-based)  : 697
+Model-predicted anomalies         : 200
+
+Confusion Matrix:
+  True Negatives  (correctly Normal)  : 1271
+  False Positives (flagged, but rule says Normal) : 32
+  False Negatives (missed by model)   : 529
+  True Positives  (correctly flagged) : 168
+
+Precision : 0.840
+Recall    : 0.241
+F1-score  : 0.375
+
+Note: 'Reference labels' are derived from risk keywords (e.g. 'failure',
+'error', 'invalid user') during preprocessing, not human-annotated ground
+truth. They provide a transparent, explainable baseline to sanity-check
+the unsupervised Isolation Forest model's behavior.
