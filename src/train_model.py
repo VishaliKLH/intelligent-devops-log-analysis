@@ -28,6 +28,16 @@ CLEAN_CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "cleane
 FEATURES_CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "features.csv")
 ANOMALIES_CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "anomalies_report.csv")
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "isolation_forest_model.pkl")
+BASELINE_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "baseline.pkl")
+
+FEATURE_COLS = [
+    "message_length",
+    "component_encoded",
+    "hour_of_day",
+    "is_night",
+    "errors_last_5min",
+    "same_message_freq",
+]
 
 RISK_KEYWORDS = ["fail", "error", "abnormal", "invalid", "refused", "denied"]
 
@@ -66,18 +76,30 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def save_baseline(df: pd.DataFrame) -> dict:
+    """
+    Remember what 'normal' looked like during training, so NEW log lines
+    typed into the dashboard can be turned into the same 6 features and
+    judged by the same trained model.
+
+    - component_map : component name -> number (same numbering as LabelEncoder)
+    - message_freq  : how many times each exact message appeared in training
+    """
+    baseline = {
+        "component_map": {
+            c: i for i, c in enumerate(sorted(df["component"].astype(str).unique()))
+        },
+        "message_freq": df["message"].value_counts().to_dict(),
+    }
+    joblib.dump(baseline, BASELINE_PATH)
+    return baseline
+
+
 def train_and_detect(contamination: float = 0.1):
     df = pd.read_csv(CLEAN_CSV_PATH)
     df = build_features(df)
 
-    feature_cols = [
-        "message_length",
-        "component_encoded",
-        "hour_of_day",
-        "is_night",
-        "errors_last_5min",
-        "same_message_freq",
-    ]
+    feature_cols = FEATURE_COLS
 
     X = df[feature_cols].fillna(0)
 
@@ -93,6 +115,7 @@ def train_and_detect(contamination: float = 0.1):
     os.makedirs(os.path.dirname(FEATURES_CSV_PATH), exist_ok=True)
     df.to_csv(FEATURES_CSV_PATH, index=False)
     joblib.dump(model, MODEL_PATH)
+    save_baseline(df)
 
     anomalies = df[df["predicted_label"] == 1][
         ["timestamp", "component", "message", "reference_label", "status"]
