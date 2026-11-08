@@ -133,3 +133,11 @@ This pattern (AIOps) is used in production by companies to monitor server
 fleets, detect security incidents, and catch failures before they cause
 outages — replacing manual log review with automated, continuously-running
 detection integrated into the DevOps pipeline.
+
+## Live Log Check (dashboard)
+
+The dashboard has a **Live Log Check** box: paste new syslog lines
+(`Mon DD HH:MM:SS host component[pid]: message`) and the trained Isolation Forest
+labels each line **Normal / Watch / Anomaly** with a score and a reason.
+It reuses the model plus `output/baseline.pkl` (saved by `train_model.py`).
+Limitation: the model was trained on one 2,000-line file, so it is a demo, not a production detector.
